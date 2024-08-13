@@ -26,8 +26,9 @@ namespace OpenAI_Tests
 		[Test]
 		public async Task SimpleVisionTest()
 		{
-			var api = new OpenAI_API.OpenAIAPI();
-			var result = await api.Chat.CreateChatCompletionAsync("What is the primary non-white color in this logo's gradient? Just tell me the one main color.", ImageInput.FromFile("../../../../OpenAI_API/nuget_logo.png"));
+            var api = new OpenAI_API.OpenAIAPI(new OpenAI_API.APIAuthentication("EMP.TY"));
+            api.ApiUrlFormat = "http://192.168.180.44:8897/{0}/{1}/";
+            var result = await api.Chat.CreateChatCompletionAsync("What is the primary non-white color in this logo's gradient? Just tell me the one main color.", "/data/model/Phi-3-vision-128k-instruct", ImageInput.FromFile("../../../../OpenAI_API/nuget_logo.png"));
 			Assert.IsNotNull(result);
 			Assert.IsNotNull(result.Choices);
 			Assert.AreEqual(1, result.Choices.Count);

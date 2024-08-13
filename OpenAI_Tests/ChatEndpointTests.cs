@@ -24,17 +24,18 @@ namespace OpenAI_Tests
 		[Test]
 		public void BasicCompletion()
 		{
-			var api = new OpenAI_API.OpenAIAPI();
-
-			Assert.IsNotNull(api.Chat);
+			var api = new OpenAI_API.OpenAIAPI(new OpenAI_API.APIAuthentication("EMP.TY"));
+			api.ApiUrlFormat = "http://192.168.180.40:9990/{0}/{1}/";
+            Assert.IsNotNull(api.Chat);
 
 			var results = api.Chat.CreateChatCompletionAsync(new ChatRequest()
 			{
-				Model = Model.ChatGPTTurbo,
+				Model = "/data/Qwen1.5-32B-Chat",
 				Temperature = 0.1,
-				MaxTokens = 5,
+				MaxTokens = 128,
+				TopP = 0.8,
 				Messages = new ChatMessage[] {
-					new ChatMessage(ChatMessageRole.User, "Hello!")
+					new ChatMessage(ChatMessageRole.User, "Hello!",1)
 				}
 			}).Result;
 			Assert.IsNotNull(results);
