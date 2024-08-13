@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using OpenAI_API.Chat;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using static System.Net.WebRequestMethods;
 
@@ -32,13 +35,20 @@ namespace OpenAI_API.Chat
 			this.TextContent = text;
 		}
 
-		/// <summary>
-		/// Constructor for a new Chat Message with text and one or more images
-		/// </summary>
-		/// <param name="role">The role of the message, which can be "system", "assistant" or "user"</param>
-		/// <param name="text">The text to send in the message.  May be null if only sending image(s).</param>
-		/// <param name="imageInputs">Optionally add one or more images to the message if using a GPT Vision model.  Consider using <see cref="ImageInput.FromFile(string, string)"/> to load an image from a local file, or <see cref="ImageInput.FromImageUrl(string, string)"/> to point to an image via URL.  Please see <seealso href="https://platform.openai.com/docs/guides/vision"/> for more information and limitations.</param>
-		public ChatMessage(ChatMessageRole role, string text, params ImageInput[] imageInputs)
+        public ChatMessage(ChatMessageRole role, string text,int t)
+        {
+            this.Role = role;
+            this.TextContent = text;
+			SetCIOType(t);
+        }
+
+        /// <summary>
+        /// Constructor for a new Chat Message with text and one or more images
+        /// </summary>
+        /// <param name="role">The role of the message, which can be "system", "assistant" or "user"</param>
+        /// <param name="text">The text to send in the message.  May be null if only sending image(s).</param>
+        /// <param name="imageInputs">Optionally add one or more images to the message if using a GPT Vision model.  Consider using <see cref="ImageInput.FromFile(string, string)"/> to load an image from a local file, or <see cref="ImageInput.FromImageUrl(string, string)"/> to point to an image via URL.  Please see <seealso href="https://platform.openai.com/docs/guides/vision"/> for more information and limitations.</param>
+        public ChatMessage(ChatMessageRole role, string text, params ImageInput[] imageInputs)
 		{
 			this.Role = role;
 			this.TextContent = text;
@@ -68,7 +78,7 @@ namespace OpenAI_API.Chat
 		/// The text content of the message.
 		/// </summary>
 		[JsonIgnore]
-		public string TextContent { get; set; }
+        public string TextContent { get; set; }
 
 		/// <summary>
 		/// To support multi-modal messages, this property has been renamed to <see cref="TextContent"/>.  Please use that instead."/>
@@ -77,33 +87,40 @@ namespace OpenAI_API.Chat
 		[JsonIgnore]
 		public string Content { get => TextContent; set => TextContent = value; }
 
-		/// <summary>
-		/// This is only used for serializing the request into JSON, do not use it directly.
-		/// </summary>
+		private ContentItemObj _cio=new ContentItemObj();
+
+		public void SetCIOType(int t)
+		{
+			_cio.Type=t;
+		}
+
+        /// <summary>
+        /// This is only used for serializing the request into JSON, do not use it directly.
+        /// </summary>
+        [JsonConverter(typeof(ContentDataConverter))]
 		[JsonProperty("content")]
-		[JsonConverter(typeof(ContentDataConverter))]
-		internal IList<ContentItem> ContentItems
+        public ContentItemObj ContentItems
 		{
 			get
 			{
-				List<ContentItem> items = new List<ContentItem>();
+                _cio.CiList = new List<ContentItem>();
 				if (!string.IsNullOrEmpty(TextContent))
 				{
-					items.Add(new ContentItem(TextContent));
+                    _cio.CiList.Add(new ContentItem(TextContent));
 				}
 				if (Images != null && Images.Count > 0)
 				{
 					foreach (var image in Images)
 					{
-						items.Add(new ContentItem(image));
+                        _cio.CiList.Add(new ContentItem(image));
 					}
 				}
-
-				return items;
+				return _cio;
 			}
 			set
 			{
-				foreach (var item in value)
+                _cio= value;
+                foreach (var item in _cio.CiList)
 				{
 					if (item.Type == "text")
 					{
@@ -129,10 +146,18 @@ namespace OpenAI_API.Chat
 		[JsonIgnore]
 		public List<ImageInput> Images { get; set; } = new List<ImageInput>();
 
-		/// <summary>
-		/// This is a helper class to serialize the content of the message to JSON
-		/// </summary>
-		internal class ContentItem
+		public class ContentItemObj
+		{
+			public IList<ContentItem> CiList { get; set; }
+
+			public int Type { get; set; }
+		}
+
+
+        /// <summary>
+        /// This is a helper class to serialize the content of the message to JSON
+        /// </summary>
+        public class ContentItem
 		{
 			private string text;
 			private ImageInput image;
@@ -304,23 +329,27 @@ namespace OpenAI_API.Chat
 
 		internal class ContentDataConverter : JsonConverter
 		{
-			public override bool CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
 			{
 				return true;
 			}
 
 			public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 			{
-				JToken token = JToken.Load(reader);
+                var cio = new ContentItemObj();
+
+                JToken token = JToken.Load(reader);
 				if (token.Type == JTokenType.Object)
 				{
-					return token.ToObject<IList<ContentItem>>();
-				}
+					cio.CiList = token.ToObject<IList<ContentItem>>();
+                    return cio;
+                }
 				else if (token.Type == JTokenType.String)
 				{
-					List<ContentItem> content = new List<ContentItem>();
-					content.Add(new ContentItem(token.ToObject<string>()));
-					return content;
+                    IList<ContentItem> content = new List<ContentItem>();
+                    content.Add(new ContentItem(token.ToObject<string>()));
+					cio.CiList = content;
+                    return cio;
 				}
 				else
 				{
@@ -330,9 +359,19 @@ namespace OpenAI_API.Chat
 
 			public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 			{
-				serializer.Serialize(writer, value);
-			}
-		}
-
+				if(value is ContentItemObj) 
+				{ 
+					var cio=value as ContentItemObj;
+					if (cio.Type == 0)
+					{
+                        serializer.Serialize(writer, cio.CiList);
+                    }
+                    else
+					{
+                        serializer.Serialize(writer, cio.CiList[0].Text);
+                    }
+                }
+            }
+        }
 	}
 }

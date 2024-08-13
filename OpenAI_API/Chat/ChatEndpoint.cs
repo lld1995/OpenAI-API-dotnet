@@ -132,11 +132,11 @@ namespace OpenAI_API.Chat
 		/// <param name="userMessage">The user message text to use in the generation.</param>
 		/// <param name="images">The images to use in the generation.</param>
 		/// <returns>The <see cref="ChatResult"/> with the API response.</returns>
-		public Task<ChatResult> CreateChatCompletionAsync(string userMessage, params ChatMessage.ImageInput[] images)
+		public Task<ChatResult> CreateChatCompletionAsync(string userMessage, Model model, params ChatMessage.ImageInput[] images)
 		{
 			ChatRequest request = new ChatRequest(DefaultChatRequestArgs)
 			{
-				Model = Model.GPT4_Vision,
+				Model = model,
 				Messages = new ChatMessage[] { new ChatMessage(ChatMessageRole.User, userMessage, images) },
 			};
 			return CreateChatCompletionAsync(request);

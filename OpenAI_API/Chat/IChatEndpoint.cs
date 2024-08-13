@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace OpenAI_API.Chat
 {
-	/// <summary>
-	/// An interface for <see cref="ChatEndpoint"/>, the ChatGPT API endpoint. Use this endpoint to send multiple messages and carry on a conversation.
-	/// </summary>
-	public interface IChatEndpoint
+    /// <summary>
+    /// An interface for <see cref="ChatEndpoint"/>, the ChatGPT API endpoint. Use this endpoint to send multiple messages and carry on a conversation.
+    /// </summary>
+    public interface IChatEndpoint
 	{
 		/// <summary>
 		/// This allows you to set default parameters for every request, for example to set a default temperature or max tokens.  For every request, if you do not have a parameter set on the request but do have it set here as a default, the request will automatically pick up the default value.
@@ -74,7 +74,7 @@ namespace OpenAI_API.Chat
 		/// <param name="userMessage">The user message text to use in the generation.</param>
 		/// <param name="images">The images to use in the generation.</param>
 		/// <returns>The <see cref="ChatResult"/> with the API response.</returns>
-		Task<ChatResult> CreateChatCompletionAsync(string userMessage, params ChatMessage.ImageInput[] images);
+		Task<ChatResult> CreateChatCompletionAsync(string userMessage,Model model, params ChatMessage.ImageInput[] images);
 
 
 		/// <summary>
