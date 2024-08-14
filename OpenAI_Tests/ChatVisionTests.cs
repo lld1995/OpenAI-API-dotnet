@@ -38,15 +38,16 @@ namespace OpenAI_Tests
 		[Test]
 		public void TestVisionFromPath()
 		{
-			var api = new OpenAI_API.OpenAIAPI();
-			ChatRequest request = new ChatRequest()
+            var api = new OpenAI_API.OpenAIAPI(new OpenAI_API.APIAuthentication("EMP.TY"));
+            api.ApiUrlFormat = "http://192.168.180.44:8897/{0}/{1}/";
+            ChatRequest request = new ChatRequest()
 			{
-				Model = Model.GPT4_Vision,
+				Model = "/data/model/Phi-3-vision-128k-instruct",
 				Temperature = 0.0,
 				MaxTokens = 500,
 				Messages = new ChatMessage[] {
 					new ChatMessage(ChatMessageRole.System, "You are a helpful assistant"),
-					new ChatMessage(ChatMessageRole.User, "What is the primary color in this logo?",ImageInput.FromFile("../../../../OpenAI_API/nuget_logo.png"))
+					new ChatMessage(ChatMessageRole.User, "What is the primary color in this logo?",new ImageInput("data:image/jpeg;base64,L0Z1bGxQYWdlIERvCg=="))
 				}
 			};
 			var result = api.Chat.CreateChatCompletionAsync(request).Result;
