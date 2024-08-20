@@ -274,9 +274,9 @@ namespace OpenAI_API.Chat
 			/// </summary>
 			/// <param name="imageData">The image as bytes to be base64 encoded.  OpenAI currently supports PNG (.png), JPEG (.jpeg and .jpg), WEBP (.webp), and non-animated GIF (.gif)</param>
 			/// <param name="detail">By controlling the detail parameter, which has three options, low, high, or auto, you have control over how the model processes the image and generates its textual understanding</param>
-			public ImageInput(byte[] imageData, string detail = "auto")
+			public ImageInput(byte[] imageData,string mime, string detail = "auto")
 			{
-				this.Url = "data:image/jpeg;base64," + Convert.ToBase64String(imageData);
+				this.Url = "data:"+mime+";base64," + Convert.ToBase64String(imageData);
 				this.Detail = detail;
 			}
 
@@ -297,9 +297,9 @@ namespace OpenAI_API.Chat
 			/// <param name="imageData">The image as bytes to be base64 encoded</param>
 			/// <param name="detail">By controlling the detail parameter, which has three options, low, high, or auto, you have control over how the model processes the image and generates its textual understanding</param>
 			/// <returns></returns>
-			public static ImageInput FromImageBytes(byte[] imageData, string detail = "auto")
+			public static ImageInput FromImageBytes(byte[] imageData,string mime, string detail = "auto")
 			{
-				return new ImageInput(imageData, detail);
+				return new ImageInput(imageData, mime, detail);
 			}
 
 			/// <summary>
